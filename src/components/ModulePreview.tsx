@@ -1,9 +1,13 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
 import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { toast } from 'sonner';
+import TransactionDialog, { TransactionData } from './accounting/TransactionDialog';
 
 interface ModulePreviewProps {
   module: Module;
@@ -16,6 +20,17 @@ interface AccountItem {
   name: string;
   type: 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
   balance: number;
+}
+
+// Define transaction data structure
+interface Transaction {
+  id: string;
+  date: Date;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  account: string;
 }
 
 const accounts: AccountItem[] = [
@@ -34,12 +49,55 @@ const accounts: AccountItem[] = [
 
 const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    {
+      id: '1',
+      date: new Date(2023, 6, 15),
+      description: 'Office Supplies',
+      amount: 245.00,
+      type: 'expense',
+      category: 'Office Supplies',
+      account: 'Checking Account'
+    },
+    {
+      id: '2',
+      date: new Date(2023, 6, 20),
+      description: 'Client Payment',
+      amount: 1200.00,
+      type: 'income',
+      category: 'Services',
+      account: 'Checking Account'
+    },
+    {
+      id: '3',
+      date: new Date(2023, 6, 25),
+      description: 'Software Subscription',
+      amount: 49.99,
+      type: 'expense',
+      category: 'Software',
+      account: 'Credit Card'
+    },
+  ]);
 
   // Filter accounts based on search term
   const filteredAccounts = accounts.filter(account => 
     account.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     account.code.includes(searchTerm)
   );
+
+  const handleSaveTransaction = (transactionData: TransactionData) => {
+    const newTransaction: Transaction = {
+      ...transactionData,
+      id: `tx-${Date.now()}`,
+    };
+    
+    setTransactions([newTransaction, ...transactions]);
+    
+    toast.success(`${transactionData.type === 'income' ? 'Income' : 'Expense'} recorded successfully`, {
+      description: `$${transactionData.amount.toFixed(2)} - ${transactionData.description}`
+    });
+  };
 
   // Render specialized content for the Accounting module
   if (module.id === 'accounting') {
@@ -112,7 +170,11 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
                   <h4 className="text-md font-medium">Quick Actions</h4>
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors">
+                  <li 
+                    className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors flex items-center gap-2"
+                    onClick={() => setIsTransactionDialogOpen(true)}
+                  >
+                    <Plus size={14} className="text-violet-600 dark:text-violet-400" />
                     Record New Transaction
                   </li>
                   <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors">
@@ -128,25 +190,38 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
               </div>
               
               <div className="p-6 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <Receipt size={16} className="text-amber-600 dark:text-amber-400" />
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <Receipt size={16} className="text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <h4 className="text-md font-medium">Recent Transactions</h4>
                   </div>
-                  <h4 className="text-md font-medium">Recent Transactions</h4>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs"
+                    onClick={() => setIsTransactionDialogOpen(true)}
+                  >
+                    <Plus size={14} className="mr-1" /> New
+                  </Button>
                 </div>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-1 border-b border-dragonfly-100 dark:border-dragonfly-700">
-                    <span className="text-dragonfly-600 dark:text-dragonfly-300">Office Supplies</span>
-                    <span className="text-rose-600 dark:text-rose-400">-$245.00</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-dragonfly-100 dark:border-dragonfly-700">
-                    <span className="text-dragonfly-600 dark:text-dragonfly-300">Client Payment</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">+$1,200.00</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-dragonfly-600 dark:text-dragonfly-300">Software Subscription</span>
-                    <span className="text-rose-600 dark:text-rose-400">-$49.99</span>
-                  </div>
+                  {transactions.slice(0, 3).map((transaction) => (
+                    <div 
+                      key={transaction.id} 
+                      className="flex justify-between py-1 border-b border-dragonfly-100 dark:border-dragonfly-700"
+                    >
+                      <span className="text-dragonfly-600 dark:text-dragonfly-300">
+                        {transaction.description}
+                      </span>
+                      <span className={transaction.type === 'income' 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-600 dark:text-rose-400"}>
+                        {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -314,6 +389,13 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
             </motion.div>
           </TabsContent>
         </Tabs>
+
+        {/* Transaction Dialog */}
+        <TransactionDialog 
+          open={isTransactionDialogOpen}
+          onOpenChange={setIsTransactionDialogOpen}
+          onSave={handleSaveTransaction}
+        />
       </div>
     );
   }
