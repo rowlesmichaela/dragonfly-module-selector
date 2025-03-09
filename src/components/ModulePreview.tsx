@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
 import { 
   CreditCard, Receipt, LineChart, PiggyBank, Plus, Search, FileText, 
-  Trash2, Edit, Send, Contact, Mail, Phone, MapPin, Filter, Users, Tag
+  Trash2, Edit, Send, Contact, Mail, Phone, MapPin, Filter, Users, Tag,
+  FolderClosed
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Input } from './ui/input';
@@ -11,7 +12,8 @@ import { Button } from './ui/button';
 import { toast } from 'sonner';
 import TransactionDialog, { TransactionData } from './accounting/TransactionDialog';
 import InvoiceDialog, { InvoiceData } from './accounting/InvoiceDialog';
-import ContactDialog, { ContactData } from './contacts/ContactDialog';
+import ContactDialog from './contacts/ContactDialog';
+import type { ContactData } from './contacts/ContactDialog';
 
 interface ModulePreviewProps {
   module: Module;
@@ -33,19 +35,6 @@ interface Transaction {
   type: 'income' | 'expense';
   category: string;
   account: string;
-}
-
-interface ContactData {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  company: string;
-  title: string;
-  category: string;
-  notes: string;
-  tags: string[];
 }
 
 const accounts: AccountItem[] = [
@@ -525,7 +514,7 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
                     filteredAccounts.map((account) => (
                       <div 
                         key={account.id} 
-                        className="grid grid-cols-12 gap-2 p-3 border-b border-dragonfly-100 dark:border-dragonfly-700 hover:bg-dragonfly-100/50 dark:hover:bg-dragonfly-700/50 transition-colors cursor-pointer text-sm"
+                        className="grid grid-cols-12 gap-2 p-3 border-b border-dragonfly-100 dark:border-dragonfly-700 hover:bg-dragonfly-100/50 dark:hover:bg-dragonfly-700/50 transition-colors text-sm"
                       >
                         <div className="col-span-2 font-mono">{account.code}</div>
                         <div className="col-span-4">{account.name}</div>
@@ -1007,7 +996,7 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
       </div>
       
       <div className="p-12 flex flex-col items-center justify-center border border-dashed border-dragonfly-200 dark:border-dragonfly-700 rounded-xl">
-        <Folders className="h-12 w-12 text-dragonfly-300 dark:text-dragonfly-600 mb-4" />
+        <FolderClosed className="h-12 w-12 text-dragonfly-300 dark:text-dragonfly-600 mb-4" />
         <h3 className="text-xl font-medium mb-2">Module under development</h3>
         <p className="text-dragonfly-500 dark:text-dragonfly-400 text-center max-w-md">
           This module is currently being developed. Check back soon for updates.
@@ -1018,3 +1007,4 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
 };
 
 export default ModulePreview;
+
