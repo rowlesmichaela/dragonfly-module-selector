@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ModuleCard, { Module } from './ModuleCard';
 import ModulePreview from './ModulePreview';
 import { Grid3X3, Settings, FileText, BarChart4, Database, Users, Code, ArrowLeft, Wallet, Contact } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const modules: Module[] = [
   {
@@ -42,11 +43,12 @@ const modules: Module[] = [
     color: 'bg-purple-500'
   },
   {
-    id: 'users',
-    title: 'Users',
-    description: 'Manage user accounts and permissions.',
+    id: 'customers',
+    title: 'Customers',
+    description: 'Manage your customer contacts and information.',
     icon: <Users className="text-white" size={20} />,
-    color: 'bg-rose-500'
+    color: 'bg-teal-600',
+    route: '/customers'
   },
   {
     id: 'developer',
@@ -73,9 +75,14 @@ const modules: Module[] = [
 
 const ModuleSelector: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const navigate = useNavigate();
 
   const handleSelectModule = (module: Module) => {
-    setSelectedModule(module);
+    if (module.route) {
+      navigate(module.route);
+    } else {
+      setSelectedModule(module);
+    }
   };
 
   const handleBack = () => {

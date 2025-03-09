@@ -9,6 +9,7 @@ export interface Module {
   description: string;
   icon: React.ReactNode;
   color: string;
+  route?: string; // Optional route property for navigation
 }
 
 interface ModuleCardProps {
@@ -30,7 +31,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, index, onClick }) => {
       className="w-full"
     >
       <div 
-        className="module-card cursor-pointer p-6 h-full flex flex-col"
+        className="module-card cursor-pointer p-6 h-full flex flex-col border rounded-lg hover:shadow-md dark:border-gray-800 transition-all"
         onClick={() => onClick(module)}
       >
         <div className={cn(
