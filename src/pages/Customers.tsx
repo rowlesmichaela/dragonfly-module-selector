@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import CustomerList from '@/components/customers/CustomerList';
 import { Customer } from '@/components/contacts/Customer';
@@ -131,6 +132,59 @@ const CustomersPage: React.FC = () => {
     navigate('/');
   };
 
+  const exportCustomers = () => {
+    // Prepare the data for export
+    const exportData = customers.map(customer => ({
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      company: customer.company,
+      title: customer.title,
+      category: customer.category,
+      notes: customer.notes,
+      tags: customer.tags.join(', '),
+      contactType: customer.contactType,
+      customerSince: customer.customerSince,
+      status: customer.status,
+      value: customer.value,
+      lastPurchase: customer.lastPurchase || '',
+      preferredContactMethod: customer.preferredContactMethod || ''
+    }));
+
+    // Convert to CSV
+    const headers = Object.keys(exportData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...exportData.map(row => 
+        headers.map(header => {
+          const value = row[header as keyof typeof row];
+          // Wrap strings with commas in quotes
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `customers-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export successful",
+      description: `${customers.length} customers exported to CSV.`,
+    });
+  };
+
   return (
     <div className="container mx-auto p-6">
       <button 
@@ -143,7 +197,13 @@ const CustomersPage: React.FC = () => {
       
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Customers</h1>
-        <Button onClick={handleAddCustomer}>Add Customer</Button>
+        <div className="flex gap-2">
+          <Button onClick={exportCustomers} variant="outline" className="flex items-center gap-2">
+            <Download size={16} />
+            Export
+          </Button>
+          <Button onClick={handleAddCustomer}>Add Customer</Button>
+        </div>
       </div>
       
       <div className="relative mb-6">
