@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
@@ -622,4 +623,45 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
           </TabsContent>
         </Tabs>
 
-        <
+        {/* Add transaction and invoice dialogs */}
+        <TransactionDialog 
+          isOpen={isTransactionDialogOpen} 
+          onClose={() => setIsTransactionDialogOpen(false)} 
+          onSave={handleSaveTransaction}
+        />
+        
+        <InvoiceDialog 
+          isOpen={isInvoiceDialogOpen} 
+          onClose={() => setIsInvoiceDialogOpen(false)} 
+          onSave={handleSaveInvoice}
+          editingInvoice={editingInvoice}
+        />
+      </div>
+    );
+  }
+
+  // Default return for other modules
+  return (
+    <div className="bg-white dark:bg-dragonfly-900 rounded-xl p-8 shadow-sm border border-dragonfly-200 dark:border-dragonfly-800">
+      <div className="flex items-center gap-4 mb-8">
+        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${module.color}`}>
+          <div className="text-white">{module.icon}</div>
+        </div>
+        <div>
+          <h2 className="text-2xl font-medium">{module.title}</h2>
+          <p className="text-dragonfly-500 dark:text-dragonfly-400">{module.description}</p>
+        </div>
+      </div>
+      
+      <div className="p-12 flex flex-col items-center justify-center border border-dashed border-dragonfly-200 dark:border-dragonfly-700 rounded-xl">
+        <Folders className="h-12 w-12 text-dragonfly-300 dark:text-dragonfly-600 mb-4" />
+        <h3 className="text-xl font-medium mb-2">Module under development</h3>
+        <p className="text-dragonfly-500 dark:text-dragonfly-400 text-center max-w-md">
+          This module is currently being developed. Check back soon for updates.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default ModulePreview;
