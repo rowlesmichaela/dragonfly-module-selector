@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
-import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search } from 'lucide-react';
+import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search, FileInvoice, Trash2, Edit, Send } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import TransactionDialog, { TransactionData } from './accounting/TransactionDialog';
+import InvoiceDialog, { InvoiceData } from './accounting/InvoiceDialog';
 
 interface ModulePreviewProps {
   module: Module;
@@ -50,6 +50,8 @@ const accounts: AccountItem[] = [
 const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceData | undefined>(undefined);
   const [transactions, setTransactions] = useState<Transaction[]>([
     {
       id: '1',
@@ -80,7 +82,38 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
     },
   ]);
 
-  // Filter accounts based on search term
+  const [invoices, setInvoices] = useState<InvoiceData[]>([
+    {
+      id: 'inv-1',
+      invoiceNumber: 'INV-2023-0001',
+      date: new Date(2023, 5, 20),
+      dueDate: new Date(2023, 6, 20),
+      clientName: 'Acme Corporation',
+      clientEmail: 'billing@acmecorp.com',
+      items: [
+        { id: '1', description: 'Website Development', quantity: 1, rate: 1500, amount: 1500 },
+        { id: '2', description: 'SEO Optimization', quantity: 10, rate: 75, amount: 750 }
+      ],
+      notes: 'Payment due in 30 days',
+      total: 2250,
+      status: 'sent'
+    },
+    {
+      id: 'inv-2',
+      invoiceNumber: 'INV-2023-0002',
+      date: new Date(2023, 6, 15),
+      dueDate: new Date(2023, 7, 15),
+      clientName: 'TechStart Inc.',
+      clientEmail: 'accounts@techstart.io',
+      items: [
+        { id: '1', description: 'UI/UX Design', quantity: 20, rate: 85, amount: 1700 }
+      ],
+      notes: 'Net 30',
+      total: 1700,
+      status: 'paid'
+    }
+  ]);
+
   const filteredAccounts = accounts.filter(account => 
     account.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     account.code.includes(searchTerm)
@@ -99,7 +132,54 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
     });
   };
 
-  // Render specialized content for the Accounting module
+  const handleSaveInvoice = (invoiceData: InvoiceData) => {
+    const isEditing = invoices.some(inv => inv.id === invoiceData.id);
+    
+    if (isEditing) {
+      setInvoices(invoices.map(inv => 
+        inv.id === invoiceData.id ? invoiceData : inv
+      ));
+      toast.success("Invoice updated successfully", {
+        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.clientName}`
+      });
+    } else {
+      setInvoices([invoiceData, ...invoices]);
+      toast.success("Invoice created successfully", {
+        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.clientName}`
+      });
+    }
+    
+    setEditingInvoice(undefined);
+  };
+
+  const handleEditInvoice = (invoice: InvoiceData) => {
+    setEditingInvoice(invoice);
+    setIsInvoiceDialogOpen(true);
+  };
+
+  const handleDeleteInvoice = (invoiceId: string) => {
+    setInvoices(invoices.filter(inv => inv.id !== invoiceId));
+    toast.success("Invoice deleted", {
+      description: "The invoice has been permanently deleted"
+    });
+  };
+
+  const handleUpdateInvoiceStatus = (invoiceId: string, status: 'draft' | 'sent' | 'paid') => {
+    setInvoices(invoices.map(inv => 
+      inv.id === invoiceId ? { ...inv, status } : inv
+    ));
+    
+    const statusLabels = {
+      draft: 'Marked as draft',
+      sent: 'Marked as sent',
+      paid: 'Marked as paid'
+    };
+    
+    toast.success(statusLabels[status], {
+      description: `Invoice status has been updated`
+    });
+  };
+
   if (module.id === 'accounting') {
     return (
       <div className="bg-white dark:bg-dragonfly-900 rounded-xl p-8 shadow-sm border border-dragonfly-200 dark:border-dragonfly-800">
@@ -117,6 +197,7 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
           <TabsList className="mb-4 bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="chart-of-accounts">Chart of Accounts</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -177,7 +258,14 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
                     <Plus size={14} className="text-violet-600 dark:text-violet-400" />
                     Record New Transaction
                   </li>
-                  <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors">
+                  <li 
+                    className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setEditingInvoice(undefined);
+                      setIsInvoiceDialogOpen(true);
+                    }}
+                  >
+                    <FileInvoice size={14} className="text-violet-600 dark:text-violet-400" />
                     Create Invoice
                   </li>
                   <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors">
@@ -388,76 +476,150 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
               </div>
             </motion.div>
           </TabsContent>
+          
+          <TabsContent value="invoices">
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Invoices</h3>
+                <Button 
+                  variant="default" 
+                  className="bg-violet-500 hover:bg-violet-600 text-white"
+                  onClick={() => {
+                    setEditingInvoice(undefined);
+                    setIsInvoiceDialogOpen(true);
+                  }}
+                >
+                  <Plus size={16} className="mr-1" />
+                  New Invoice
+                </Button>
+              </div>
+              
+              <div className="bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 p-3 bg-dragonfly-100 dark:bg-dragonfly-700 text-sm font-medium">
+                  <div className="col-span-2">Invoice #</div>
+                  <div className="col-span-2">Date</div>
+                  <div className="col-span-3">Client</div>
+                  <div className="col-span-2 text-right">Amount</div>
+                  <div className="col-span-1 text-center">Status</div>
+                  <div className="col-span-2 text-right">Actions</div>
+                </div>
+                
+                <div className="max-h-[400px] overflow-y-auto">
+                  {invoices.length > 0 ? (
+                    invoices.map((invoice) => (
+                      <div 
+                        key={invoice.id} 
+                        className="grid grid-cols-12 gap-2 p-3 border-b border-dragonfly-100 dark:border-dragonfly-700 hover:bg-dragonfly-100/50 dark:hover:bg-dragonfly-700/50 transition-colors text-sm"
+                      >
+                        <div className="col-span-2 font-medium">{invoice.invoiceNumber}</div>
+                        <div className="col-span-2">{invoice.date.toLocaleDateString()}</div>
+                        <div className="col-span-3">
+                          <div>{invoice.clientName}</div>
+                          <div className="text-xs text-dragonfly-500 dark:text-dragonfly-400">{invoice.clientEmail}</div>
+                        </div>
+                        <div className="col-span-2 text-right font-medium">
+                          ${invoice.total.toFixed(2)}
+                        </div>
+                        <div className="col-span-1 text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                            invoice.status === 'paid' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                            invoice.status === 'sent' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                            'bg-dragonfly-100 text-dragonfly-800 dark:bg-dragonfly-900/30 dark:text-dragonfly-300'
+                          }`}>
+                            {invoice.status === 'paid' ? 'Paid' : 
+                             invoice.status === 'sent' ? 'Sent' : 'Draft'}
+                          </span>
+                        </div>
+                        <div className="col-span-2 text-right space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-dragonfly-600 dark:text-dragonfly-300"
+                            onClick={() => handleEditInvoice(invoice)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          
+                          {invoice.status !== 'sent' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-blue-600 dark:text-blue-400"
+                              onClick={() => handleUpdateInvoiceStatus(invoice.id, 'sent')}
+                              title="Mark as sent"
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          {invoice.status !== 'paid' && invoice.status === 'sent' && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-emerald-600 dark:text-emerald-400"
+                              onClick={() => handleUpdateInvoiceStatus(invoice.id, 'paid')}
+                              title="Mark as paid"
+                            >
+                              <PiggyBank className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => handleDeleteInvoice(invoice.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-dragonfly-400">
+                      No invoices found. Click "New Invoice" to create one.
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-3 bg-dragonfly-100/50 dark:bg-dragonfly-700/30 border-t border-dragonfly-100 dark:border-dragonfly-700 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span>Total Invoices: {invoices.length}</span>
+                    <span className="font-medium">
+                      Total Amount: ${invoices.reduce((sum, inv) => sum + inv.total, 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+                {(['draft', 'sent', 'paid'] as const).map((status) => {
+                  const statusInvoices = invoices.filter(inv => inv.status === status);
+                  const statusTotal = statusInvoices.reduce((sum, inv) => sum + inv.total, 0);
+                  
+                  return (
+                    <div 
+                      key={status} 
+                      className="bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700 rounded-lg p-3"
+                    >
+                      <div className="text-sm text-dragonfly-500 dark:text-dragonfly-400 mb-1 capitalize">
+                        {status} Invoices
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="font-medium">${statusTotal.toFixed(2)}</div>
+                        <div className="text-dragonfly-500 dark:text-dragonfly-400">{statusInvoices.length} invoices</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </TabsContent>
         </Tabs>
 
-        {/* Transaction Dialog */}
-        <TransactionDialog 
-          open={isTransactionDialogOpen}
-          onOpenChange={setIsTransactionDialogOpen}
-          onSave={handleSaveTransaction}
-        />
-      </div>
-    );
-  }
-
-  // Default render for other modules
-  return (
-    <div className="bg-white dark:bg-dragonfly-900 rounded-xl p-8 shadow-sm border border-dragonfly-200 dark:border-dragonfly-800">
-      <div className="flex items-center gap-4 mb-8">
-        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${module.color}`}>
-          <div className="text-white">{module.icon}</div>
-        </div>
-        <div>
-          <h2 className="text-2xl font-medium">{module.title}</h2>
-          <p className="text-dragonfly-500 dark:text-dragonfly-400">{module.description}</p>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        <motion.div 
-          className="p-6 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-        >
-          <h3 className="text-lg font-medium mb-3">Module Content</h3>
-          <div className="h-32 flex items-center justify-center text-dragonfly-400">
-            <p>This is a preview of the {module.title} module.</p>
-          </div>
-        </motion.div>
-        
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-        >
-          <div className="p-6 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700">
-            <h4 className="text-md font-medium mb-2">Features</h4>
-            <ul className="space-y-1 text-sm text-dragonfly-600 dark:text-dragonfly-300">
-              <li>• Feature one</li>
-              <li>• Feature two</li>
-              <li>• Feature three</li>
-            </ul>
-          </div>
-          
-          <div className="p-6 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700">
-            <h4 className="text-md font-medium mb-2">Statistics</h4>
-            <div className="space-y-2 text-sm text-dragonfly-600 dark:text-dragonfly-300">
-              <div className="flex justify-between">
-                <span>Usage:</span>
-                <span className="font-medium">87%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Status:</span>
-                <span className="text-emerald-600 dark:text-emerald-400">Active</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-export default ModulePreview;
+        <
