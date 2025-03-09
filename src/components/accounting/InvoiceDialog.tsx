@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -66,7 +65,6 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isManualEntry, setIsManualEntry] = useState(!selectedCustomerId);
 
-  // Effect to update customer details when a customer is selected
   useEffect(() => {
     if (selectedCustomerId) {
       const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
@@ -99,7 +97,6 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
     setItems(items.map(item => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
-        // Recalculate amount if quantity or rate changed
         if (field === 'quantity' || field === 'rate') {
           updatedItem.amount = updatedItem.quantity * updatedItem.rate;
         }
@@ -127,23 +124,16 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
   };
 
   const handleSaveCustomer = (contactData: ContactData, customerDetails: Partial<Omit<Customer, keyof ContactData>>) => {
-    // Create a new customer
     const newCustomer = new Customer(contactData, customerDetails);
     
-    // Update the form with the new customer's info
     setSelectedCustomerId(newCustomer.id);
     setCustomerName(newCustomer.name);
     setCustomerEmail(newCustomer.email);
     setIsManualEntry(false);
     
-    // Close the customer dialog
     setIsCustomerDialogOpen(false);
     
-    // Show success toast
-    toast({
-      title: "Customer created",
-      description: `${newCustomer.name} has been added as a new customer.`,
-    });
+    toast.success(`${newCustomer.name} has been added as a new customer.`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -164,7 +154,6 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       return;
     }
 
-    // Find the existing customer if selected
     let customer: Customer;
     
     if (selectedCustomerId) {
@@ -172,12 +161,10 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       if (existingCustomer) {
         customer = existingCustomer;
       } else {
-        // This should not happen, but just in case
         toast.error("Selected customer not found");
         return;
       }
     } else {
-      // Create a ContactData object for manual entry
       const contactData: ContactData = {
         id: `cust-${Date.now()}`,
         name: customerName,
@@ -191,7 +178,6 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
         tags: []
       };
 
-      // Create the Customer object
       customer = new Customer(contactData);
     }
 
