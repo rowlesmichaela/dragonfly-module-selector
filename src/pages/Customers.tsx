@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search, ArrowLeft, Download } from 'lucide-react';
+import { Search, ArrowLeft, Download, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import CustomerList from '@/components/customers/CustomerList';
 import { Customer } from '@/components/contacts/Customer';
@@ -186,43 +185,56 @@ const CustomersPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <button 
-        onClick={handleBack}
-        className="flex items-center gap-2 mb-6 px-4 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-      >
-        <ArrowLeft size={18} />
-        <span>Back to Home Page</span>
-      </button>
-      
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Customers</h1>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="flex items-center justify-between mb-8">
+        <button 
+          onClick={handleBack}
+          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <ArrowLeft size={16} />
+          <span>Back</span>
+        </button>
+        
         <div className="flex gap-2">
-          <Button onClick={exportCustomers} variant="outline" className="flex items-center gap-2">
-            <Download size={16} />
+          <Button 
+            onClick={exportCustomers} 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2 text-sm"
+          >
+            <Download size={14} />
             Export
           </Button>
-          <Button onClick={handleAddCustomer}>Add Customer</Button>
         </div>
       </div>
       
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
+        <Button onClick={handleAddCustomer} size="sm" className="flex items-center gap-1">
+          <Plus size={16} />
+          Add Customer
+        </Button>
+      </div>
+      
+      <div className="relative mb-6 max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
         <Input
-          className="pl-10"
-          placeholder="Search customers by name, email, or company..."
+          className="pl-9 h-9 text-sm"
+          placeholder="Search customers..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       
-      <Separator className="mb-6" />
+      <Separator className="my-6" />
       
-      <CustomerList 
-        customers={filteredCustomers} 
-        onEdit={handleEditCustomer}
-        onDelete={handleDeleteCustomer}
-      />
+      <div className="bg-white dark:bg-slate-950 rounded-lg border shadow-sm">
+        <CustomerList 
+          customers={filteredCustomers} 
+          onEdit={handleEditCustomer}
+          onDelete={handleDeleteCustomer}
+        />
+      </div>
       
       <CustomerDialog
         open={isDialogOpen}
