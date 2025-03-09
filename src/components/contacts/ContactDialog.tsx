@@ -19,6 +19,11 @@ export interface ContactData {
   tags: string[];
 }
 
+// Define marker interface for contacts that can be customers
+export interface CustomerContact extends ContactData {
+  isCustomer: boolean;
+}
+
 interface ContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
