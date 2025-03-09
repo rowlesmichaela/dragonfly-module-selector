@@ -235,7 +235,19 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
               </div>
               
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="customer">Customer</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="customer">Customer</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="xs" 
+                    onClick={handleNewCustomer}
+                    className="flex items-center gap-1 text-xs"
+                  >
+                    <UserPlus className="h-3 w-3" />
+                    Create New Customer
+                  </Button>
+                </div>
                 
                 {isManualEntry ? (
                   <div className="space-y-4">
@@ -291,35 +303,15 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
                       </SelectContent>
                     </Select>
                     
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button type="button" variant="outline" size="icon">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-56 p-2" align="end">
-                        <div className="grid gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="flex justify-start items-center gap-2 w-full"
-                            onClick={handleManualEntryToggle}
-                          >
-                            <Plus className="h-4 w-4" /> Manual Entry
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="flex justify-start items-center gap-2 w-full"
-                            onClick={handleNewCustomer}
-                          >
-                            <UserPlus className="h-4 w-4" /> Create New Customer
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon"
+                      onClick={handleManualEntryToggle}
+                      title="Manual Entry"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   </div>
                 )}
               </div>
