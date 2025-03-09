@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModuleCard, { Module } from './ModuleCard';
 import ModulePreview from './ModulePreview';
-import { Grid3X3, Layers, Settings, FileText, BarChart4, Database, Users, Code, ArrowLeft } from 'lucide-react';
+import { Grid3X3, Settings, FileText, BarChart4, Database, Users, Code, ArrowLeft } from 'lucide-react';
 
 const modules: Module[] = [
   {
@@ -12,13 +11,6 @@ const modules: Module[] = [
     description: 'Overview of your system performance and metrics.',
     icon: <Grid3X3 className="text-white" size={20} />,
     color: 'bg-blue-500'
-  },
-  {
-    id: 'layers',
-    title: 'Layers',
-    description: 'Manage and organize your content layers.',
-    icon: <Layers className="text-white" size={20} />,
-    color: 'bg-indigo-500'
   },
   {
     id: 'settings',
