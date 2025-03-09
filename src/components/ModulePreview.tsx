@@ -14,6 +14,7 @@ import TransactionDialog, { TransactionData } from './accounting/TransactionDial
 import InvoiceDialog, { InvoiceData } from './accounting/InvoiceDialog';
 import ContactDialog from './contacts/ContactDialog';
 import type { ContactData } from './contacts/ContactDialog';
+import { Customer } from './contacts/Customer';
 
 interface ModulePreviewProps {
   module: Module;
@@ -92,8 +93,18 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
       invoiceNumber: 'INV-2023-0001',
       date: new Date(2023, 5, 20),
       dueDate: new Date(2023, 6, 20),
-      clientName: 'Acme Corporation',
-      clientEmail: 'billing@acmecorp.com',
+      customer: new Customer({
+        id: 'cust-1',
+        name: 'Acme Corporation',
+        email: 'billing@acmecorp.com',
+        phone: '',
+        address: '',
+        company: 'Acme Corporation',
+        title: '',
+        category: 'business',
+        notes: '',
+        tags: []
+      }),
       items: [
         { id: '1', description: 'Website Development', quantity: 1, rate: 1500, amount: 1500 },
         { id: '2', description: 'SEO Optimization', quantity: 10, rate: 75, amount: 750 }
@@ -107,8 +118,18 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
       invoiceNumber: 'INV-2023-0002',
       date: new Date(2023, 6, 15),
       dueDate: new Date(2023, 7, 15),
-      clientName: 'TechStart Inc.',
-      clientEmail: 'accounts@techstart.io',
+      customer: new Customer({
+        id: 'cust-2',
+        name: 'TechStart Inc.',
+        email: 'accounts@techstart.io',
+        phone: '',
+        address: '',
+        company: 'TechStart Inc.',
+        title: '',
+        category: 'business',
+        notes: '',
+        tags: []
+      }),
       items: [
         { id: '1', description: 'UI/UX Design', quantity: 20, rate: 85, amount: 1700 }
       ],
@@ -200,12 +221,12 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
         inv.id === invoiceData.id ? invoiceData : inv
       ));
       toast.success("Invoice updated successfully", {
-        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.clientName}`
+        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.customer.name}`
       });
     } else {
       setInvoices([invoiceData, ...invoices]);
       toast.success("Invoice created successfully", {
-        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.clientName}`
+        description: `Invoice #${invoiceData.invoiceNumber} for ${invoiceData.customer.name}`
       });
     }
     
@@ -611,8 +632,8 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
                         <div className="col-span-2 font-medium">{invoice.invoiceNumber}</div>
                         <div className="col-span-2">{invoice.date.toLocaleDateString()}</div>
                         <div className="col-span-3">
-                          <div>{invoice.clientName}</div>
-                          <div className="text-xs text-dragonfly-500 dark:text-dragonfly-400">{invoice.clientEmail}</div>
+                          <div>{invoice.customer.name}</div>
+                          <div className="text-xs text-dragonfly-500 dark:text-dragonfly-400">{invoice.customer.email}</div>
                         </div>
                         <div className="col-span-2 text-right font-medium">
                           ${invoice.total.toFixed(2)}
@@ -1007,4 +1028,3 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
 };
 
 export default ModulePreview;
-

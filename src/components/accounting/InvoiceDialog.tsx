@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer } from '@/components/contacts/Customer';
+import { ContactData } from '@/components/contacts/ContactDialog';
 
 export interface InvoiceItem {
   id: string;
@@ -104,8 +105,8 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       return;
     }
 
-    // Create a Customer object with the provided information
-    const customer = new Customer({
+    // Create a ContactData object to pass to the Customer constructor
+    const contactData: ContactData = {
       id: editInvoice?.customer?.id || `cust-${Date.now()}`,
       name: customerName,
       email: customerEmail,
@@ -116,7 +117,10 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       category: editInvoice?.customer?.category || 'business',
       notes: editInvoice?.customer?.notes || '',
       tags: editInvoice?.customer?.tags || []
-    });
+    };
+
+    // Create the Customer object
+    const customer = new Customer(contactData);
 
     const invoiceData: InvoiceData = {
       id: editInvoice?.id || `inv-${Date.now()}`,

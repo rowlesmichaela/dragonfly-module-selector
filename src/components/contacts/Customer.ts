@@ -1,63 +1,81 @@
 
 import { ContactData } from './ContactDialog';
 
-export interface CustomerData extends ContactData {
+export class Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  company: string;
+  title: string;
+  category: 'personal' | 'business' | 'other';
+  notes: string;
+  tags: string[];
   customerSince: string; // Date when they became a customer
   status: 'active' | 'inactive' | 'lead';
   value: number; // Customer lifetime value
   lastPurchase?: string; // Date of last purchase
   preferredContactMethod?: 'email' | 'phone' | 'mail';
-}
 
-export class Customer {
-  data: CustomerData;
-
-  constructor(contactData: ContactData, customerData?: Partial<Omit<CustomerData, keyof ContactData>>) {
-    this.data = {
-      ...contactData,
-      customerSince: customerData?.customerSince || new Date().toISOString().split('T')[0],
-      status: customerData?.status || 'lead',
-      value: customerData?.value || 0,
-      lastPurchase: customerData?.lastPurchase,
-      preferredContactMethod: customerData?.preferredContactMethod
-    };
+  constructor(contactData: ContactData, customerData?: Partial<Omit<Customer, keyof ContactData>>) {
+    // Copy contact data
+    this.id = contactData.id;
+    this.name = contactData.name;
+    this.email = contactData.email;
+    this.phone = contactData.phone;
+    this.address = contactData.address;
+    this.company = contactData.company;
+    this.title = contactData.title;
+    this.category = contactData.category;
+    this.notes = contactData.notes;
+    this.tags = contactData.tags;
+    
+    // Set customer specific data
+    this.customerSince = customerData?.customerSince || new Date().toISOString().split('T')[0];
+    this.status = customerData?.status || 'lead';
+    this.value = customerData?.value || 0;
+    this.lastPurchase = customerData?.lastPurchase;
+    this.preferredContactMethod = customerData?.preferredContactMethod;
   }
 
   updateValue(amount: number): void {
-    this.data.value += amount;
+    this.value += amount;
     if (amount > 0) {
-      this.data.lastPurchase = new Date().toISOString().split('T')[0];
+      this.lastPurchase = new Date().toISOString().split('T')[0];
     }
   }
 
   activate(): void {
-    this.data.status = 'active';
+    this.status = 'active';
   }
 
   deactivate(): void {
-    this.data.status = 'inactive';
+    this.status = 'inactive';
   }
 
   isActive(): boolean {
-    return this.data.status === 'active';
+    return this.status === 'active';
   }
 
   // Convert Customer back to ContactData (for example, when saving to contact list)
   toContactData(): ContactData {
-    const { 
-      customerSince, 
-      status, 
-      value, 
-      lastPurchase, 
-      preferredContactMethod, 
-      ...contactData 
-    } = this.data;
-    
-    return contactData;
+    return {
+      id: this.id,
+      name: this.name,
+      email: this.email,
+      phone: this.phone,
+      address: this.address,
+      company: this.company,
+      title: this.title,
+      category: this.category,
+      notes: this.notes,
+      tags: this.tags
+    };
   }
 
   // Create a Customer from existing ContactData
-  static fromContact(contact: ContactData, customerData?: Partial<Omit<CustomerData, keyof ContactData>>): Customer {
+  static fromContact(contact: ContactData, customerData?: Partial<Omit<Customer, keyof ContactData>>): Customer {
     return new Customer(contact, customerData);
   }
 }
