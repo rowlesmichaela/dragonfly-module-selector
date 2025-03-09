@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
-import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search, FileInvoice, Trash2, Edit, Send } from 'lucide-react';
+import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search, FileText, Trash2, Edit, Send } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -14,7 +13,6 @@ interface ModulePreviewProps {
   module: Module;
 }
 
-// Define chart of accounts data structure
 interface AccountItem {
   id: string;
   code: string;
@@ -23,7 +21,6 @@ interface AccountItem {
   balance: number;
 }
 
-// Define transaction data structure
 interface Transaction {
   id: string;
   date: Date;
@@ -266,7 +263,7 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
                       setIsInvoiceDialogOpen(true);
                     }}
                   >
-                    <FileInvoice size={14} className="text-violet-600 dark:text-violet-400" />
+                    <FileText size={14} className="text-violet-600 dark:text-violet-400" />
                     Create Invoice
                   </li>
                   <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors">
@@ -623,24 +620,22 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
           </TabsContent>
         </Tabs>
 
-        {/* Add transaction and invoice dialogs */}
         <TransactionDialog 
-          isOpen={isTransactionDialogOpen} 
-          onClose={() => setIsTransactionDialogOpen(false)} 
+          open={isTransactionDialogOpen} 
+          onOpenChange={setIsTransactionDialogOpen} 
           onSave={handleSaveTransaction}
         />
         
         <InvoiceDialog 
-          isOpen={isInvoiceDialogOpen} 
-          onClose={() => setIsInvoiceDialogOpen(false)} 
+          open={isInvoiceDialogOpen} 
+          onOpenChange={setIsInvoiceDialogOpen} 
           onSave={handleSaveInvoice}
-          editingInvoice={editingInvoice}
+          editInvoice={editingInvoice}
         />
       </div>
     );
   }
 
-  // Default return for other modules
   return (
     <div className="bg-white dark:bg-dragonfly-900 rounded-xl p-8 shadow-sm border border-dragonfly-200 dark:border-dragonfly-800">
       <div className="flex items-center gap-4 mb-8">

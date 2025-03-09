@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, FileInvoice } from 'lucide-react';
+import { Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface InvoiceItem {
@@ -126,7 +126,7 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       <DialogContent className="sm:max-w-3xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileInvoice className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
             {editInvoice ? 'Edit Invoice' : 'Create New Invoice'}
           </DialogTitle>
           <DialogDescription>
