@@ -1,11 +1,16 @@
 
 import React from 'react';
+import { useAuth } from '@/context/AuthContext';
+import UserMenu from './auth/UserMenu';
+import AuthModal from './auth/AuthModal';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { user, loading } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-dragonfly-950 dark:to-dragonfly-900">
       <header className="container py-6">
@@ -17,6 +22,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <h1 className="text-xl font-medium tracking-tight">
               DragonFly
             </h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {loading ? (
+              <div className="h-8 w-24 bg-dragonfly-100 dark:bg-dragonfly-800 animate-pulse rounded-md"></div>
+            ) : user ? (
+              <UserMenu />
+            ) : (
+              <AuthModal />
+            )}
           </div>
         </div>
       </header>
