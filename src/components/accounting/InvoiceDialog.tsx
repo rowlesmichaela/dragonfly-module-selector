@@ -1,13 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, FileText } from 'lucide-react';
+import { Plus, Trash2, FileText, UserPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Customer } from '@/components/contacts/Customer';
 import { ContactData } from '@/components/contacts/ContactDialog';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import CustomerDialog from '@/components/customers/CustomerDialog';
 
 export interface InvoiceItem {
   id: string;
@@ -34,23 +43,40 @@ interface InvoiceDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (invoiceData: InvoiceData) => void;
   editInvoice?: InvoiceData;
+  customers?: Customer[];
 }
 
 const InvoiceDialog: React.FC<InvoiceDialogProps> = ({ 
   open, 
   onOpenChange, 
   onSave,
-  editInvoice 
+  editInvoice,
+  customers = []
 }) => {
   const [invoiceNumber, setInvoiceNumber] = useState(editInvoice?.invoiceNumber || `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`);
   const [date, setDate] = useState<string>(editInvoice?.date ? new Date(editInvoice.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState<string>(editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(editInvoice?.customer?.id);
   const [customerName, setCustomerName] = useState(editInvoice?.customer?.name || '');
   const [customerEmail, setCustomerEmail] = useState(editInvoice?.customer?.email || '');
   const [notes, setNotes] = useState(editInvoice?.notes || '');
   const [items, setItems] = useState<InvoiceItem[]>(editInvoice?.items || [
     { id: '1', description: '', quantity: 1, rate: 0, amount: 0 }
   ]);
+  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(!selectedCustomerId);
+
+  // Effect to update customer details when a customer is selected
+  useEffect(() => {
+    if (selectedCustomerId) {
+      const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+      if (selectedCustomer) {
+        setCustomerName(selectedCustomer.name);
+        setCustomerEmail(selectedCustomer.email);
+        setIsManualEntry(false);
+      }
+    }
+  }, [selectedCustomerId, customers]);
 
   const handleAddItem = () => {
     setItems([
@@ -87,6 +113,39 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
     return items.reduce((sum, item) => sum + item.amount, 0);
   };
 
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+  };
+
+  const handleManualEntryToggle = () => {
+    setIsManualEntry(true);
+    setSelectedCustomerId(undefined);
+  };
+
+  const handleNewCustomer = () => {
+    setIsCustomerDialogOpen(true);
+  };
+
+  const handleSaveCustomer = (contactData: ContactData, customerDetails: Partial<Omit<Customer, keyof ContactData>>) => {
+    // Create a new customer
+    const newCustomer = new Customer(contactData, customerDetails);
+    
+    // Update the form with the new customer's info
+    setSelectedCustomerId(newCustomer.id);
+    setCustomerName(newCustomer.name);
+    setCustomerEmail(newCustomer.email);
+    setIsManualEntry(false);
+    
+    // Close the customer dialog
+    setIsCustomerDialogOpen(false);
+    
+    // Show success toast
+    toast({
+      title: "Customer created",
+      description: `${newCustomer.name} has been added as a new customer.`,
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -105,22 +164,36 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       return;
     }
 
-    // Create a ContactData object to pass to the Customer constructor
-    const contactData: ContactData = {
-      id: editInvoice?.customer?.id || `cust-${Date.now()}`,
-      name: customerName,
-      email: customerEmail,
-      phone: editInvoice?.customer?.phone || '',
-      address: editInvoice?.customer?.address || '',
-      company: editInvoice?.customer?.company || '',
-      title: editInvoice?.customer?.title || '',
-      category: editInvoice?.customer?.category || 'business',
-      notes: editInvoice?.customer?.notes || '',
-      tags: editInvoice?.customer?.tags || []
-    };
+    // Find the existing customer if selected
+    let customer: Customer;
+    
+    if (selectedCustomerId) {
+      const existingCustomer = customers.find(c => c.id === selectedCustomerId);
+      if (existingCustomer) {
+        customer = existingCustomer;
+      } else {
+        // This should not happen, but just in case
+        toast.error("Selected customer not found");
+        return;
+      }
+    } else {
+      // Create a ContactData object for manual entry
+      const contactData: ContactData = {
+        id: `cust-${Date.now()}`,
+        name: customerName,
+        email: customerEmail,
+        phone: '',
+        address: '',
+        company: '',
+        title: '',
+        category: 'business',
+        notes: '',
+        tags: []
+      };
 
-    // Create the Customer object
-    const customer = new Customer(contactData);
+      // Create the Customer object
+      customer = new Customer(contactData);
+    }
 
     const invoiceData: InvoiceData = {
       id: editInvoice?.id || `inv-${Date.now()}`,
@@ -139,178 +212,256 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {editInvoice ? 'Edit Invoice' : 'Create New Invoice'}
-          </DialogTitle>
-          <DialogDescription>
-            Fill in the details below to {editInvoice ? 'update the' : 'create a new'} invoice.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="invoice-number">Invoice Number</Label>
-              <Input 
-                id="invoice-number" 
-                value={invoiceNumber} 
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="date">Invoice Date</Label>
-              <Input 
-                id="date" 
-                type="date" 
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="customer-name">Customer Name</Label>
-              <Input 
-                id="customer-name" 
-                value={customerName} 
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="due-date">Due Date</Label>
-              <Input 
-                id="due-date" 
-                type="date" 
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="customer-email">Customer Email</Label>
-              <Input 
-                id="customer-email" 
-                type="email" 
-                value={customerEmail} 
-                onChange={(e) => setCustomerEmail(e.target.value)}
-              />
-            </div>
-          </div>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-3xl overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {editInvoice ? 'Edit Invoice' : 'Create New Invoice'}
+            </DialogTitle>
+            <DialogDescription>
+              Fill in the details below to {editInvoice ? 'update the' : 'create a new'} invoice.
+            </DialogDescription>
+          </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium">Invoice Items</h3>
-              <Button 
-                type="button"
-                variant="outline" 
-                size="sm"
-                onClick={handleAddItem}
-                className="flex items-center gap-1"
-              >
-                <Plus className="h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
-            
-            <div className="border rounded-md overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-dragonfly-50 dark:bg-dragonfly-800/50">
-                  <tr className="border-b">
-                    <th className="py-2 pl-4 pr-2 text-left">Description</th>
-                    <th className="py-2 px-2 text-center w-20">Qty</th>
-                    <th className="py-2 px-2 text-center w-24">Rate</th>
-                    <th className="py-2 px-2 text-right w-28">Amount</th>
-                    <th className="py-2 pl-2 pr-4 text-center w-16"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item, index) => (
-                    <tr key={item.id} className="border-b">
-                      <td className="py-2 pl-4 pr-2">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoice-number">Invoice Number</Label>
+                <Input 
+                  id="invoice-number" 
+                  value={invoiceNumber} 
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="date">Invoice Date</Label>
+                <Input 
+                  id="date" 
+                  type="date" 
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="customer">Customer</Label>
+                
+                {isManualEntry ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm">Manual Entry</p>
+                      {customers.length > 0 && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="xs" 
+                          onClick={() => setIsManualEntry(false)}
+                          className="flex items-center gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
                         <Input 
-                          value={item.description} 
-                          onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                          placeholder="Item description"
-                          className="border-0 p-1 h-8 focus-visible:ring-0"
+                          placeholder="Customer Name" 
+                          value={customerName} 
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          required
                         />
-                      </td>
-                      <td className="py-2 px-2">
+                      </div>
+                      <div>
                         <Input 
-                          type="number" 
-                          min="1"
-                          value={item.quantity} 
-                          onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))}
-                          className="border-0 p-1 h-8 text-center focus-visible:ring-0"
+                          type="email" 
+                          placeholder="Customer Email" 
+                          value={customerEmail} 
+                          onChange={(e) => setCustomerEmail(e.target.value)}
                         />
-                      </td>
-                      <td className="py-2 px-2">
-                        <Input 
-                          type="number" 
-                          min="0"
-                          step="0.01"
-                          value={item.rate} 
-                          onChange={(e) => handleItemChange(item.id, 'rate', Number(e.target.value))}
-                          className="border-0 p-1 h-8 text-center focus-visible:ring-0"
-                        />
-                      </td>
-                      <td className="py-2 px-2 text-right font-medium">
-                        ${(item.quantity * item.rate).toFixed(2)}
-                      </td>
-                      <td className="py-2 pl-2 pr-4 text-center">
-                        {items.length > 1 && (
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Select
+                      value={selectedCustomerId}
+                      onValueChange={handleCustomerSelect}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select a customer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map(customer => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name} {customer.company ? `(${customer.company})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="icon">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 p-2" align="end">
+                        <div className="grid gap-2">
                           <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="h-7 w-7 text-destructive"
+                            size="sm"
+                            className="flex justify-start items-center gap-2 w-full"
+                            onClick={handleManualEntryToggle}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Plus className="h-4 w-4" /> Manual Entry
                           </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-dragonfly-50 dark:bg-dragonfly-800/50">
-                    <td colSpan={3} className="py-2 pl-4 pr-2 text-right font-medium">Total:</td>
-                    <td className="py-2 px-2 text-right font-medium">${calculateTotal().toFixed(2)}</td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="flex justify-start items-center gap-2 w-full"
+                            onClick={handleNewCustomer}
+                          >
+                            <UserPlus className="h-4 w-4" /> Create New Customer
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="due-date">Due Date</Label>
+                <Input 
+                  id="due-date" 
+                  type="date" 
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes/Terms</Label>
-            <Input 
-              id="notes" 
-              value={notes} 
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Payment terms, notes to client, etc."
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
-              {editInvoice ? 'Update Invoice' : 'Create Invoice'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-base font-medium">Invoice Items</h3>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAddItem}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Item
+                </Button>
+              </div>
+              
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-dragonfly-50 dark:bg-dragonfly-800/50">
+                    <tr className="border-b">
+                      <th className="py-2 pl-4 pr-2 text-left">Description</th>
+                      <th className="py-2 px-2 text-center w-20">Qty</th>
+                      <th className="py-2 px-2 text-center w-24">Rate</th>
+                      <th className="py-2 px-2 text-right w-28">Amount</th>
+                      <th className="py-2 pl-2 pr-4 text-center w-16"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <tr key={item.id} className="border-b">
+                        <td className="py-2 pl-4 pr-2">
+                          <Input 
+                            value={item.description} 
+                            onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
+                            placeholder="Item description"
+                            className="border-0 p-1 h-8 focus-visible:ring-0"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input 
+                            type="number" 
+                            min="1"
+                            value={item.quantity} 
+                            onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                            className="border-0 p-1 h-8 text-center focus-visible:ring-0"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input 
+                            type="number" 
+                            min="0"
+                            step="0.01"
+                            value={item.rate} 
+                            onChange={(e) => handleItemChange(item.id, 'rate', Number(e.target.value))}
+                            className="border-0 p-1 h-8 text-center focus-visible:ring-0"
+                          />
+                        </td>
+                        <td className="py-2 px-2 text-right font-medium">
+                          ${(item.quantity * item.rate).toFixed(2)}
+                        </td>
+                        <td className="py-2 pl-2 pr-4 text-center">
+                          {items.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="h-7 w-7 text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-dragonfly-50 dark:bg-dragonfly-800/50">
+                      <td colSpan={3} className="py-2 pl-4 pr-2 text-right font-medium">Total:</td>
+                      <td className="py-2 px-2 text-right font-medium">${calculateTotal().toFixed(2)}</td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes/Terms</Label>
+              <Input 
+                id="notes" 
+                value={notes} 
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Payment terms, notes to client, etc."
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
+                {editInvoice ? 'Update Invoice' : 'Create Invoice'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <CustomerDialog
+        open={isCustomerDialogOpen}
+        onOpenChange={setIsCustomerDialogOpen}
+        onSave={handleSaveCustomer}
+      />
+    </>
   );
 };
 
