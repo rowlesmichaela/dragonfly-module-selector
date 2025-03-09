@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { Customer } from '@/components/contacts/Customer';
 
 export interface InvoiceItem {
   id: string;
@@ -20,8 +21,7 @@ export interface InvoiceData {
   invoiceNumber: string;
   date: Date;
   dueDate: Date;
-  clientName: string;
-  clientEmail: string;
+  customer: Customer;
   items: InvoiceItem[];
   notes: string;
   total: number;
@@ -44,8 +44,8 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
   const [invoiceNumber, setInvoiceNumber] = useState(editInvoice?.invoiceNumber || `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`);
   const [date, setDate] = useState<string>(editInvoice?.date ? new Date(editInvoice.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState<string>(editInvoice?.dueDate ? new Date(editInvoice.dueDate).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-  const [clientName, setClientName] = useState(editInvoice?.clientName || '');
-  const [clientEmail, setClientEmail] = useState(editInvoice?.clientEmail || '');
+  const [customerName, setCustomerName] = useState(editInvoice?.customer?.name || '');
+  const [customerEmail, setCustomerEmail] = useState(editInvoice?.customer?.email || '');
   const [notes, setNotes] = useState(editInvoice?.notes || '');
   const [items, setItems] = useState<InvoiceItem[]>(editInvoice?.items || [
     { id: '1', description: '', quantity: 1, rate: 0, amount: 0 }
@@ -89,8 +89,8 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!clientName) {
-      toast.error("Please enter a client name");
+    if (!customerName) {
+      toast.error("Please enter a customer name");
       return;
     }
     
@@ -104,13 +104,26 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
       return;
     }
 
+    // Create a Customer object with the provided information
+    const customer = new Customer({
+      id: editInvoice?.customer?.id || `cust-${Date.now()}`,
+      name: customerName,
+      email: customerEmail,
+      phone: editInvoice?.customer?.phone || '',
+      address: editInvoice?.customer?.address || '',
+      company: editInvoice?.customer?.company || '',
+      title: editInvoice?.customer?.title || '',
+      category: editInvoice?.customer?.category || 'business',
+      notes: editInvoice?.customer?.notes || '',
+      tags: editInvoice?.customer?.tags || []
+    });
+
     const invoiceData: InvoiceData = {
       id: editInvoice?.id || `inv-${Date.now()}`,
       invoiceNumber,
       date: new Date(date),
       dueDate: new Date(dueDate),
-      clientName,
-      clientEmail,
+      customer,
       items,
       notes,
       total: calculateTotal(),
@@ -158,11 +171,11 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="client-name">Client Name</Label>
+              <Label htmlFor="customer-name">Customer Name</Label>
               <Input 
-                id="client-name" 
-                value={clientName} 
-                onChange={(e) => setClientName(e.target.value)}
+                id="customer-name" 
+                value={customerName} 
+                onChange={(e) => setCustomerName(e.target.value)}
                 required
               />
             </div>
@@ -179,12 +192,12 @@ const InvoiceDialog: React.FC<InvoiceDialogProps> = ({
             </div>
             
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="client-email">Client Email</Label>
+              <Label htmlFor="customer-email">Customer Email</Label>
               <Input 
-                id="client-email" 
+                id="customer-email" 
                 type="email" 
-                value={clientEmail} 
-                onChange={(e) => setClientEmail(e.target.value)}
+                value={customerEmail} 
+                onChange={(e) => setCustomerEmail(e.target.value)}
               />
             </div>
           </div>
