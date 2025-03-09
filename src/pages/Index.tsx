@@ -3,8 +3,12 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import ModuleSelector from '@/components/ModuleSelector';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import AuthForm from '@/components/auth/AuthForm';
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
   return (
     <Layout>
       <div className="container py-12">
@@ -25,7 +29,27 @@ const Index = () => {
           </p>
         </motion.div>
 
-        <ModuleSelector />
+        {loading ? (
+          <div className="flex justify-center">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        ) : user ? (
+          <ModuleSelector />
+        ) : (
+          <div className="max-w-md mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-medium mb-2">Sign in to access modules</h2>
+                <p className="text-dragonfly-500 dark:text-dragonfly-400">Please sign in or create an account to access the DragonFly modules.</p>
+              </div>
+              <AuthForm />
+            </motion.div>
+          </div>
+        )}
       </div>
     </Layout>
   );
