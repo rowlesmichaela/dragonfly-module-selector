@@ -1,14 +1,14 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import CustomerList from '@/components/customers/CustomerList';
 import { Customer } from '@/components/contacts/Customer';
 import { ContactData } from '@/components/contacts/ContactDialog';
 import CustomerDialog from '@/components/customers/CustomerDialog';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Sample customer data for initial state
 const initialCustomers: Customer[] = [
@@ -71,6 +71,7 @@ const CustomersPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | undefined>(undefined);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -92,7 +93,6 @@ const CustomersPage: React.FC = () => {
     const isEditing = !!customerToEdit;
     
     if (isEditing) {
-      // Update existing customer
       setCustomers(prev => prev.map(c => 
         c.id === customerData.id 
           ? new Customer(customerData, { ...customerDetails, value: c.value }) 
@@ -103,7 +103,6 @@ const CustomersPage: React.FC = () => {
         description: `${customerData.name}'s information has been updated.`,
       });
     } else {
-      // Add new customer
       const newCustomer = new Customer(customerData, customerDetails);
       setCustomers(prev => [...prev, newCustomer]);
       toast({
@@ -122,8 +121,20 @@ const CustomersPage: React.FC = () => {
     });
   };
 
+  const handleBack = () => {
+    navigate('/');
+  };
+
   return (
     <div className="container mx-auto p-6">
+      <button 
+        onClick={handleBack}
+        className="flex items-center gap-2 mb-6 px-4 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+      >
+        <ArrowLeft size={18} />
+        <span>Back to Home Page</span>
+      </button>
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Customers</h1>
         <Button onClick={handleAddCustomer}>Add Customer</Button>
