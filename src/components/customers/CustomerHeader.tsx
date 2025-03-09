@@ -19,7 +19,7 @@ const CustomerHeader: React.FC<CustomerHeaderProps> = ({ onExport }) => {
     <div className="flex items-center justify-between mb-8">
       <button 
         onClick={handleBack}
-        className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        className="flex items-center gap-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
       >
         <ArrowLeft size={16} />
         <span>Back</span>

@@ -19,7 +19,7 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
-        <Button onClick={onAddCustomer} size="sm" className="flex items-center gap-1">
+        <Button onClick={onAddCustomer} className="flex items-center gap-1">
           <Plus size={16} />
           Add Customer
         </Button>
@@ -28,7 +28,7 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({
       <div className="relative mb-6 max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
         <Input
-          className="pl-9 h-9 text-sm"
+          className="pl-9"
           placeholder="Search customers..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}

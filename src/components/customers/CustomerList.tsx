@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Customer } from '@/components/contacts/Customer';
 import { 
   Table, 
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface CustomerListProps {
   customers: Customer[];
@@ -38,7 +37,7 @@ const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, onDelete
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-lg border shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>

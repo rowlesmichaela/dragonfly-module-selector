@@ -130,7 +130,7 @@ const CustomersPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="container py-6 md:py-10">
       <CustomerHeader onExport={() => exportCustomersToCSV(customers)} />
       
       <CustomerSearch 
@@ -141,13 +141,11 @@ const CustomersPage: React.FC = () => {
       
       <Separator className="my-6" />
       
-      <div className="bg-white dark:bg-slate-950 rounded-lg border shadow-sm">
-        <CustomerList 
-          customers={filteredCustomers} 
-          onEdit={handleEditCustomer}
-          onDelete={handleDeleteCustomer}
-        />
-      </div>
+      <CustomerList 
+        customers={filteredCustomers} 
+        onEdit={handleEditCustomer}
+        onDelete={handleDeleteCustomer}
+      />
       
       <CustomerDialog
         open={isDialogOpen}
