@@ -1,3 +1,4 @@
+
 import { ContactData } from './ContactDialog';
 
 export class Customer {
@@ -18,7 +19,7 @@ export class Customer {
   preferredContactMethod?: 'email' | 'phone' | 'mail';
   contactType: 'individual' | 'company';
 
-  constructor(contactData: ContactData, customerData?: Partial<Omit<Customer, keyof ContactData>>) {
+  constructor(contactData: ContactData, customerData?: Partial<Customer>) {
     // Copy contact data
     this.id = contactData.id;
     this.name = contactData.name;
@@ -30,6 +31,7 @@ export class Customer {
     this.category = contactData.category;
     this.notes = contactData.notes;
     this.tags = contactData.tags;
+    this.contactType = contactData?.contactType || contactData.contactType || 'individual';
     
     // Set customer specific data
     this.customerSince = customerData?.customerSince || new Date().toISOString().split('T')[0];
@@ -37,7 +39,6 @@ export class Customer {
     this.value = customerData?.value || 0;
     this.lastPurchase = customerData?.lastPurchase;
     this.preferredContactMethod = customerData?.preferredContactMethod;
-    this.contactType = customerData?.contactType || 'individual';
   }
 
   updateValue(amount: number): void {
@@ -71,12 +72,13 @@ export class Customer {
       title: this.title,
       category: this.category,
       notes: this.notes,
-      tags: this.tags
+      tags: this.tags,
+      contactType: this.contactType
     };
   }
 
   // Create a Customer from existing ContactData
-  static fromContact(contact: ContactData, customerData?: Partial<Omit<Customer, keyof ContactData>>): Customer {
+  static fromContact(contact: ContactData, customerData?: Partial<Customer>): Customer {
     return new Customer(contact, customerData);
   }
 }
