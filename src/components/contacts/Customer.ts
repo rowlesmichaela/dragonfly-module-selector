@@ -1,4 +1,3 @@
-
 import { ContactData } from './ContactDialog';
 
 export class Customer {
@@ -17,6 +16,7 @@ export class Customer {
   value: number; // Customer lifetime value
   lastPurchase?: string; // Date of last purchase
   preferredContactMethod?: 'email' | 'phone' | 'mail';
+  contactType: 'individual' | 'company';
 
   constructor(contactData: ContactData, customerData?: Partial<Omit<Customer, keyof ContactData>>) {
     // Copy contact data
@@ -37,6 +37,7 @@ export class Customer {
     this.value = customerData?.value || 0;
     this.lastPurchase = customerData?.lastPurchase;
     this.preferredContactMethod = customerData?.preferredContactMethod;
+    this.contactType = customerData?.contactType || 'individual';
   }
 
   updateValue(amount: number): void {

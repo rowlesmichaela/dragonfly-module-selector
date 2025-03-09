@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ export interface ContactData {
   category: 'personal' | 'business' | 'other';
   notes: string;
   tags: string[];
+  contactType?: 'individual' | 'company';
 }
 
 // Define marker interface for contacts that can be customers
@@ -48,7 +48,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({
     title: '',
     category: 'personal',
     notes: '',
-    tags: []
+    tags: [],
+    contactType: 'individual'
   };
 
   const [contact, setContact] = useState<ContactData>(initialContactState);

@@ -33,7 +33,8 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({
     title: '',
     category: 'personal',
     notes: '',
-    tags: []
+    tags: [],
+    contactType: 'individual'
   };
 
   const [contactData, setContactData] = useState<ContactData>(initialContactState);
@@ -44,7 +45,12 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({
   useEffect(() => {
     if (editCustomer) {
       // Set contact data
-      setContactData(editCustomer.toContactData());
+      const contactData = editCustomer.toContactData();
+      // Add the contactType property if it exists in the customer
+      setContactData({
+        ...contactData,
+        contactType: editCustomer.contactType || 'individual'
+      });
       
       // Set customer-specific fields
       setCustomerSince(editCustomer.customerSince);
@@ -86,6 +92,7 @@ const CustomerDialog: React.FC<CustomerDialogProps> = ({
       customerSince,
       status,
       preferredContactMethod,
+      contactType: contactData.contactType || 'individual',
       // We don't update the value here, it's managed separately
       value: editCustomer?.value || 0
     };

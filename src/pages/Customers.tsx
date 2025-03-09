@@ -22,12 +22,14 @@ const initialCustomers: Customer[] = [
     title: 'CEO',
     category: 'business',
     notes: 'Important client',
-    tags: ['premium', 'longterm']
+    tags: ['premium', 'longterm'],
+    contactType: 'individual'
   }, {
     customerSince: '2023-01-15',
     status: 'active',
     value: 12500,
-    preferredContactMethod: 'email'
+    preferredContactMethod: 'email',
+    contactType: 'individual'
   }),
   new Customer({
     id: 'customer-2',
@@ -39,29 +41,33 @@ const initialCustomers: Customer[] = [
     title: 'CTO',
     category: 'business',
     notes: 'Technical contact',
-    tags: ['technology', 'new']
+    tags: ['technology', 'new'],
+    contactType: 'individual'
   }, {
     customerSince: '2023-03-22',
     status: 'lead',
     value: 0,
-    preferredContactMethod: 'phone'
+    preferredContactMethod: 'phone',
+    contactType: 'individual'
   }),
   new Customer({
     id: 'customer-3',
-    name: 'Sarah Williams',
-    email: 'sarah@personal.com',
+    name: 'Acme Corporation',
+    email: 'info@acmecorp.com',
     phone: '555-9012',
     address: '789 Pine St, Meadowville',
     company: '',
     title: '',
-    category: 'personal',
-    notes: 'Referred by Jane Smith',
-    tags: ['personal', 'referral']
+    category: 'business',
+    notes: 'Large enterprise client',
+    tags: ['enterprise', 'priority'],
+    contactType: 'company'
   }, {
     customerSince: '2023-05-10',
     status: 'active',
-    value: 3200,
-    preferredContactMethod: 'email'
+    value: 75000,
+    preferredContactMethod: 'email',
+    contactType: 'company'
   })
 ];
 
