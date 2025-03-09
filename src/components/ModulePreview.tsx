@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Module } from './ModuleCard';
-import { CreditCard, Receipt, LineChart, PiggyBank, Folders, Plus, Search, FileText, Trash2, Edit, Send } from 'lucide-react';
+import { 
+  CreditCard, Receipt, LineChart, PiggyBank, Plus, Search, FileText, 
+  Trash2, Edit, Send, Contact, Mail, Phone, MapPin, Filter, Users, Tag
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import TransactionDialog, { TransactionData } from './accounting/TransactionDialog';
 import InvoiceDialog, { InvoiceData } from './accounting/InvoiceDialog';
+import ContactDialog, { ContactData } from './contacts/ContactDialog';
 
 interface ModulePreviewProps {
   module: Module;
@@ -29,6 +33,19 @@ interface Transaction {
   type: 'income' | 'expense';
   category: string;
   account: string;
+}
+
+interface ContactData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  company: string;
+  title: string;
+  category: string;
+  notes: string;
+  tags: string[];
 }
 
 const accounts: AccountItem[] = [
@@ -112,10 +129,66 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
     }
   ]);
 
+  const [searchContactTerm, setSearchContactTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<ContactData | undefined>(undefined);
+  const [contacts, setContacts] = useState<ContactData[]>([
+    {
+      id: 'contact-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '(555) 123-4567',
+      address: '123 Main St, Anytown, CA 94521',
+      company: 'Acme Corporation',
+      title: 'Marketing Director',
+      category: 'business',
+      notes: 'Met at the tech conference in March.',
+      tags: ['client', 'tech', 'marketing']
+    },
+    {
+      id: 'contact-2',
+      name: 'Jane Smith',
+      email: 'jane.smith@techstart.io',
+      phone: '(555) 987-6543',
+      address: '456 Oak Ave, Somewhere, CA 90210',
+      company: 'TechStart Inc.',
+      title: 'CEO',
+      category: 'business',
+      notes: 'Potential investor for the new project.',
+      tags: ['investor', 'tech', 'CEO']
+    },
+    {
+      id: 'contact-3',
+      name: 'Michael Johnson',
+      email: 'michael@gmail.com',
+      phone: '(555) 555-1212',
+      address: '789 Pine St, Elsewhere, CA 92101',
+      company: '',
+      title: '',
+      category: 'personal',
+      notes: 'College friend. Birthday on July 15th.',
+      tags: ['friend', 'personal']
+    }
+  ]);
+
   const filteredAccounts = accounts.filter(account => 
     account.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     account.code.includes(searchTerm)
   );
+
+  const filteredContacts = contacts.filter(contact => {
+    const matchesSearch = 
+      contact.name.toLowerCase().includes(searchContactTerm.toLowerCase()) ||
+      contact.email.toLowerCase().includes(searchContactTerm.toLowerCase()) ||
+      contact.phone.includes(searchContactTerm) ||
+      contact.company.toLowerCase().includes(searchContactTerm.toLowerCase());
+    
+    const matchesCategory = 
+      selectedCategory === 'all' || contact.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const handleSaveTransaction = (transactionData: TransactionData) => {
     const newTransaction: Transaction = {
@@ -175,6 +248,38 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
     
     toast.success(statusLabels[status], {
       description: `Invoice status has been updated`
+    });
+  };
+
+  const handleSaveContact = (contactData: ContactData) => {
+    const isEditing = contacts.some(c => c.id === contactData.id);
+    
+    if (isEditing) {
+      setContacts(contacts.map(c => 
+        c.id === contactData.id ? contactData : c
+      ));
+      toast.success("Contact updated successfully", {
+        description: `${contactData.name}'s information has been updated`
+      });
+    } else {
+      setContacts([contactData, ...contacts]);
+      toast.success("Contact added successfully", {
+        description: `${contactData.name} has been added to your contacts`
+      });
+    }
+    
+    setEditingContact(undefined);
+  };
+
+  const handleEditContact = (contact: ContactData) => {
+    setEditingContact(contact);
+    setIsContactDialogOpen(true);
+  };
+
+  const handleDeleteContact = (contactId: string) => {
+    setContacts(contacts.filter(c => c.id !== contactId));
+    toast.success("Contact deleted", {
+      description: "The contact has been permanently removed"
     });
   };
 
@@ -631,6 +736,259 @@ const ModulePreview: React.FC<ModulePreviewProps> = ({ module }) => {
           onOpenChange={setIsInvoiceDialogOpen} 
           onSave={handleSaveInvoice}
           editInvoice={editingInvoice}
+        />
+      </div>
+    );
+  }
+
+  if (module.id === 'contacts') {
+    return (
+      <div className="bg-white dark:bg-dragonfly-900 rounded-xl p-8 shadow-sm border border-dragonfly-200 dark:border-dragonfly-800">
+        <div className="flex items-center gap-4 mb-8">
+          <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${module.color}`}>
+            <div className="text-white">{module.icon}</div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-medium">{module.title}</h2>
+            <p className="text-dragonfly-500 dark:text-dragonfly-400">{module.description}</p>
+          </div>
+        </div>
+        
+        <div className="mb-6 flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1 p-2 bg-dragonfly-50 dark:bg-dragonfly-800/30 border border-dragonfly-100 dark:border-dragonfly-700 rounded-md">
+            <Search size={18} className="text-dragonfly-400" />
+            <Input 
+              type="text" 
+              placeholder="Search contacts..." 
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
+              value={searchContactTerm}
+              onChange={(e) => setSearchContactTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 p-2 bg-dragonfly-50 dark:bg-dragonfly-800/30 border border-dragonfly-100 dark:border-dragonfly-700 rounded-md">
+              <Filter size={16} className="text-dragonfly-400" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto text-sm"
+              >
+                <option value="all">All Categories</option>
+                <option value="personal">Personal</option>
+                <option value="business">Business</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <Button 
+              variant="default" 
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={() => {
+                setEditingContact(undefined);
+                setIsContactDialogOpen(true);
+              }}
+            >
+              <Plus size={16} className="mr-1" />
+              Add Contact
+            </Button>
+          </div>
+        </div>
+        
+        <div className="bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-12 gap-2 p-3 bg-dragonfly-100 dark:bg-dragonfly-700 text-sm font-medium">
+            <div className="col-span-3">Name</div>
+            <div className="col-span-3">Contact Information</div>
+            <div className="col-span-2">Company</div>
+            <div className="col-span-2">Category</div>
+            <div className="col-span-2 text-right">Actions</div>
+          </div>
+          
+          <div className="max-h-[600px] overflow-y-auto">
+            {filteredContacts.length > 0 ? (
+              filteredContacts.map((contact) => (
+                <div 
+                  key={contact.id} 
+                  className="grid grid-cols-12 gap-2 p-3 border-b border-dragonfly-100 dark:border-dragonfly-700 hover:bg-dragonfly-100/50 dark:hover:bg-dragonfly-700/50 transition-colors text-sm"
+                >
+                  <div className="col-span-3">
+                    <div className="font-medium">{contact.name}</div>
+                    {contact.title && <div className="text-xs text-dragonfly-500 dark:text-dragonfly-400">{contact.title}</div>}
+                  </div>
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-3 w-3 text-dragonfly-400" />
+                      <span>{contact.email || 'No email'}</span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Phone className="h-3 w-3 text-dragonfly-400" />
+                      <span>{contact.phone || 'No phone'}</span>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    {contact.company || 'N/A'}
+                  </div>
+                  <div className="col-span-2">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                      contact.category === 'business' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      contact.category === 'personal' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                      'bg-dragonfly-100 text-dragonfly-800 dark:bg-dragonfly-900/30 dark:text-dragonfly-300'
+                    }`}>
+                      {contact.category === 'business' ? 'Business' : 
+                       contact.category === 'personal' ? 'Personal' : 'Other'}
+                    </span>
+                    {contact.tags.length > 0 && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Tag className="h-3 w-3 text-dragonfly-400" />
+                        <span className="text-xs">{contact.tags.slice(0, 2).join(', ')}{contact.tags.length > 2 ? `... +${contact.tags.length - 2}` : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-2 text-right space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-dragonfly-600 dark:text-dragonfly-300"
+                      onClick={() => handleEditContact(contact)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive"
+                      onClick={() => handleDeleteContact(contact.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-dragonfly-400">
+                {searchContactTerm 
+                  ? "No contacts found matching your search criteria" 
+                  : "No contacts found. Click 'Add Contact' to create one."}
+              </div>
+            )}
+          </div>
+          
+          <div className="p-3 bg-dragonfly-100/50 dark:bg-dragonfly-700/30 border-t border-dragonfly-100 dark:border-dragonfly-700 text-sm">
+            <div className="flex justify-between items-center">
+              <span>Total Contacts: {filteredContacts.length}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <span>Personal: {contacts.filter(c => c.category === 'personal').length}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                  <span>Business: {contacts.filter(c => c.category === 'business').length}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-dragonfly-400"></div>
+                  <span>Other: {contacts.filter(c => c.category === 'other').length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <motion.div 
+            className="p-4 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Users size={16} className="text-blue-600 dark:text-blue-400" />
+              </div>
+              <h4 className="text-md font-medium">Contact Overview</h4>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-dragonfly-500 dark:text-dragonfly-400">Total Contacts</span>
+                <span className="font-medium">{contacts.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-dragonfly-500 dark:text-dragonfly-400">Business Contacts</span>
+                <span className="font-medium">{contacts.filter(c => c.category === 'business').length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-dragonfly-500 dark:text-dragonfly-400">Personal Contacts</span>
+                <span className="font-medium">{contacts.filter(c => c.category === 'personal').length}</span>
+              </div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="p-4 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <Tag size={16} className="text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h4 className="text-md font-medium">Popular Tags</h4>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {Array.from(new Set(contacts.flatMap(c => c.tags)))
+                .slice(0, 8)
+                .map(tag => (
+                  <span 
+                    key={tag} 
+                    className="bg-emerald-100 dark:bg-emerald-800/30 text-emerald-800 dark:text-emerald-300 px-2 py-1 rounded-full text-xs"
+                  >
+                    {tag}
+                  </span>
+                ))}
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            className="p-4 rounded-lg bg-dragonfly-50 dark:bg-dragonfly-800/50 border border-dragonfly-100 dark:border-dragonfly-700"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                <Contact size={16} className="text-violet-600 dark:text-violet-400" />
+              </div>
+              <h4 className="text-md font-medium">Quick Actions</h4>
+            </div>
+            <ul className="space-y-2 text-sm">
+              <li 
+                className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors flex items-center gap-2"
+                onClick={() => {
+                  setEditingContact(undefined);
+                  setIsContactDialogOpen(true);
+                }}
+              >
+                <Plus size={14} className="text-violet-600 dark:text-violet-400" />
+                Add New Contact
+              </li>
+              <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors flex items-center gap-2">
+                <Mail size={14} className="text-violet-600 dark:text-violet-400" />
+                Send Group Email
+              </li>
+              <li className="p-2 rounded hover:bg-dragonfly-100 dark:hover:bg-dragonfly-700/50 cursor-pointer transition-colors flex items-center gap-2">
+                <FileText size={14} className="text-violet-600 dark:text-violet-400" />
+                Export Contacts
+              </li>
+            </ul>
+          </motion.div>
+        </div>
+
+        <ContactDialog 
+          open={isContactDialogOpen} 
+          onOpenChange={setIsContactDialogOpen} 
+          onSave={handleSaveContact}
+          editContact={editingContact}
         />
       </div>
     );

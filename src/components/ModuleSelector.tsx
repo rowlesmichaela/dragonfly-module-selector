@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModuleCard, { Module } from './ModuleCard';
 import ModulePreview from './ModulePreview';
-import { Grid3X3, Settings, FileText, BarChart4, Database, Users, Code, ArrowLeft, Wallet } from 'lucide-react';
+import { Grid3X3, Settings, FileText, BarChart4, Database, Users, Code, ArrowLeft, Wallet, Contact } from 'lucide-react';
 
 const modules: Module[] = [
   {
@@ -61,6 +61,13 @@ const modules: Module[] = [
     description: 'Manage financial records and transactions.',
     icon: <Wallet className="text-white" size={20} />,
     color: 'bg-violet-500'
+  },
+  {
+    id: 'contacts',
+    title: 'Contacts',
+    description: 'Manage your contacts and communication.',
+    icon: <Contact className="text-white" size={20} />,
+    color: 'bg-blue-400'
   }
 ];
 
