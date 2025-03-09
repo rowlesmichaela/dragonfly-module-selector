@@ -91,7 +91,7 @@ const ModuleSelector: React.FC = () => {
               className="flex items-center gap-2 mb-6 px-4 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               <ArrowLeft size={18} />
-              <span>Back to modules</span>
+              <span>Back to Home Page</span>
             </button>
             <ModulePreview module={selectedModule} />
           </motion.div>
