@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Search, ArrowLeft, Download, Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import CustomerList from '@/components/customers/CustomerList';
 import { Customer } from '@/components/contacts/Customer';
 import { ContactData } from '@/components/contacts/ContactDialog';
 import CustomerDialog from '@/components/customers/CustomerDialog';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+import CustomerHeader from '@/components/customers/CustomerHeader';
+import CustomerSearch from '@/components/customers/CustomerSearch';
+import { exportCustomersToCSV } from '@/utils/customerExport';
 
 // Sample customer data for initial state
 const initialCustomers: Customer[] = [
@@ -77,7 +76,6 @@ const CustomersPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | undefined>(undefined);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -127,104 +125,19 @@ const CustomersPage: React.FC = () => {
     });
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
-
-  const exportCustomers = () => {
-    // Prepare the data for export
-    const exportData = customers.map(customer => ({
-      id: customer.id,
-      name: customer.name,
-      email: customer.email,
-      phone: customer.phone,
-      address: customer.address,
-      company: customer.company,
-      title: customer.title,
-      category: customer.category,
-      notes: customer.notes,
-      tags: customer.tags.join(', '),
-      contactType: customer.contactType,
-      customerSince: customer.customerSince,
-      status: customer.status,
-      value: customer.value,
-      lastPurchase: customer.lastPurchase || '',
-      preferredContactMethod: customer.preferredContactMethod || ''
-    }));
-
-    // Convert to CSV
-    const headers = Object.keys(exportData[0]);
-    const csvContent = [
-      headers.join(','),
-      ...exportData.map(row => 
-        headers.map(header => {
-          const value = row[header as keyof typeof row];
-          // Wrap strings with commas in quotes
-          return typeof value === 'string' && value.includes(',') 
-            ? `"${value}"` 
-            : value;
-        }).join(',')
-      )
-    ].join('\n');
-
-    // Create and download the file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `customers-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast({
-      title: "Export successful",
-      description: `${customers.length} customers exported to CSV.`,
-    });
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
-        <button 
-          onClick={handleBack}
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          <span>Back</span>
-        </button>
-        
-        <div className="flex gap-2">
-          <Button 
-            onClick={exportCustomers} 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2 text-sm"
-          >
-            <Download size={14} />
-            Export
-          </Button>
-        </div>
-      </div>
+      <CustomerHeader onExport={() => exportCustomersToCSV(customers)} />
       
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
-        <Button onClick={handleAddCustomer} size="sm" className="flex items-center gap-1">
-          <Plus size={16} />
-          Add Customer
-        </Button>
-      </div>
-      
-      <div className="relative mb-6 max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-        <Input
-          className="pl-9 h-9 text-sm"
-          placeholder="Search customers..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <CustomerSearch 
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onAddCustomer={handleAddCustomer}
+      />
       
       <Separator className="my-6" />
       
